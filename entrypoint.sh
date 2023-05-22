@@ -183,19 +183,6 @@ echo "::set-output name=tag::$new"
 # create local git tag
 git tag "$new"
 
-# Install gh if we have to
-if ! gh >/dev/null 2>&1
-then
-	type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
-    mkdir -p /usr/share/keyrings
-	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-	  | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-	&& chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-	&& sudo apt update \
-	&& sudo apt install gh -y
-fi
-
 # push it to github
 response=$(gh api --method POST \
                   -H "Accept: application/vnd.github+json" \
