@@ -12,7 +12,7 @@ dryrun=${DRY_RUN:-false}
 initial_version=${INITIAL_VERSION:-0.0.0}
 tag_context=${TAG_CONTEXT:-repo}
 suffix=${PRERELEASE_SUFFIX:-beta}
-verbose=${VERBOSE:-true}
+verbose=${VERBOSE:-0}
 
 cd ${GITHUB_WORKSPACE}/${source}
 
@@ -27,7 +27,7 @@ echo -e "\tINITIAL_VERSION: ${initial_version}"
 echo -e "\tTAG_CONTEXT: ${tag_context}"
 echo -e "\tPRERELEASE_SUFFIX: ${suffix}"
 echo -e "\tVERBOSE: ${verbose}"
-if $verbose
+if [ $verbose -gt 1 ]
 then
     set -x
 fi
@@ -151,9 +151,9 @@ fi
 
 if $pre_release
 then
-    echo -e "Bumping tag ${pre_tag}. \n\tNew tag ${new}"
+    echo "::debug::Bumping tag ${pre_tag}. \n\tNew tag ${new}"
 else
-    echo -e "Bumping tag ${tag}. \n\tNew tag ${new}"
+    echo "::debug::Bumping tag ${tag}. \n\tNew tag ${new}"
 fi
 
 # set outputs
@@ -170,34 +170,7 @@ fi
 
 echo ::set-output name=tag::$new
 
-
-push_tag() {
-    local tag_ref commit
-    tag_ref=$1
-    # push new tag ref to github
-    dt=$(date '+%Y-%m-%dT%H:%M:%SZ')
-    full_name=$GITHUB_REPOSITORY
-    echo "** Event Path $GITHUB_EVENT_PATH **" >&2
-    cat $GITHUB_EVENT_PATH >&2
-    git_refs_url=$(jq -r .repository.git_refs_url $GITHUB_EVENT_PATH | sed 's/{\/sha}//g')
-
-    echo "$dt: **pushing tag $new to repo $full_name" >&2
-
-    curl -s -X POST $git_refs_url \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -d "{\"ref\":\"refs/tags/$tag_ref\",\"sha\":\"$commit\"}"
-}
-
 # create local git tag
 git tag $new
-git_ref_response=$(push_tag $new)
-
-git_ref_posted=$( echo "${git_refs_response}" | jq -r .ref)
-
-echo "::debug::${git_refs_response}"
-if [ "${git_ref_posted}" = "refs/tags/${new}" ]; then
-  exit 0
-else
-  echo "::error::Tag was not created properly."
-  exit 1
-fi
+# push it to github
+git push origin $new
