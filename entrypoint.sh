@@ -187,6 +187,7 @@ git tag "$new"
 if ! gh >/dev/null 2>&1
 then
 	type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+    mkdir -p /usr/share/keyrings
 	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 	  | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
 	&& chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
