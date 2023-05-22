@@ -103,9 +103,13 @@ tag_commit=$(git rev-list -n 1 "$tag")
 # get current commit hash
 commit=$(git rev-parse HEAD)
 
+set_output () {
+    echo "$1=$2" >> "$GITHUB_OUTPUT"
+}
+
 if [ "$tag_commit" == "$commit" ]; then
     echo "No new commits since previous tag. Skipping..."
-    echo "::set-output name=tag::$tag"
+    set_output tag "$tag"
     exit 0
 fi
 
@@ -121,15 +125,15 @@ case "$log" in
     *#patch* ) new=$(semver -i patch "$tag"); part="patch";;
     *#none* ) 
         echo "Default bump was set to none. Skipping..."
-        echo "::set-output name=new_tag::$tag"
-        echo "::set-output name=tag::$tag"
+        set_output new_tag "$tag"
+        set_output tag "$tag"
         exit 0
         ;;
     * ) 
         if [ "$default_semvar_bump" == "none" ]; then
             echo "Default bump was set to none. Skipping..."
-            echo "::set-output name=new_tag::$tag"
-            echo "::set-output name=tag::$tag"
+            set_output new_tag "$tag"
+            set_output tag "$tag"
             exit 0 
         else 
             new=$(semver -i "${default_semvar_bump}" "$tag"); part=$default_semvar_bump 
@@ -168,18 +172,18 @@ else
 fi
 
 # set outputs
-echo "::set-output name=new_tag::$new"
-echo "::set-output name=part::$part"
-echo "::set-output name=major::$major"
+set_output new_tag "$new"
+set_output part "$part"
+set_output major "$major"
 
 # use dry run to determine the next tag
 if $dryrun
 then
-    echo "::set-output name=tag::$tag"
+    set_output tag "$tag"
     exit 0
 fi 
 
-echo "::set-output name=tag::$new"
+set_output tag "$new"
 
 # create local git tag
 git tag "$new"
