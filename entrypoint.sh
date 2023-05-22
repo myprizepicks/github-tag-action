@@ -33,6 +33,7 @@ then
     set -x
 fi
 
+git config --global --add safe.directory /github/workspace
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 pre_release="true"
