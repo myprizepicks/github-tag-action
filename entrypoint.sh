@@ -5,6 +5,7 @@ set -o pipefail
 set_output () {
     echo "$1=$2" >> "$GITHUB_OUTPUT"
 }
+set_output shortref "$(git rev-parse --short HEAD)"
 
 debug() {
     echo -e "::debug:: $*"
