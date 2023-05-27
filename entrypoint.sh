@@ -2,6 +2,14 @@
 
 set -o pipefail
 
+set_output () {
+    echo "$1=$2" >> "$GITHUB_OUTPUT"
+}
+
+debug() {
+    echo -e "::debug:: $*"
+}
+
 # config
 default_semvar_bump=${DEFAULT_BUMP:-minor}
 with_v=${WITH_V:-false}
@@ -83,7 +91,6 @@ case "$tag_context" in
     * ) echo "Unrecognised context"; exit 1;;
 esac
 
-
 # if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
 if [ -z "$tag" ]
 then
@@ -97,15 +104,14 @@ else
     log=$(git log "$tag"..HEAD --pretty='%B')
 fi
 
+# Set last tag
+set_output last_tag "$tag"
+
 # get current commit hash for tag
 tag_commit=$(git rev-list -n 1 "$tag")
 
 # get current commit hash
 commit=$(git rev-parse HEAD)
-
-set_output () {
-    echo "$1=$2" >> "$GITHUB_OUTPUT"
-}
 
 if [ "$tag_commit" == "$commit" ]; then
     echo "No new commits since previous tag. Skipping..."
@@ -166,9 +172,9 @@ fi
 
 if $pre_release
 then
-    echo -e "::debug::Bumping tag ${pre_tag}. \n\tNew tag ${new}"
+    debug "Bumping tag ${pre_tag}. \n\tNew tag ${new}"
 else
-    echo -e "::debug::Bumping tag ${tag}. \n\tNew tag ${new}"
+    debug "Bumping tag ${tag}. \n\tNew tag ${new}"
 fi
 
 # set outputs
