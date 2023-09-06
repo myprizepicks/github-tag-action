@@ -195,7 +195,14 @@ set_output tag "$new"
 # create local git tag
 git tag "$new"
 
+unset GITHUB_TOKEN
+echo "$deploy_token" | gh auth login --with-token
 # push it to github
-response=$(git push origin refs/tags/"$new")
+response=$(gh api --method POST \
+                  -H "Accept: application/vnd.github+json" \
+                  -H "X-GitHub-Api-Version: 2022-11-28" \
+                  "repos/$GITHUB_REPOSITORY/git/refs" \
+                  -f ref=refs/tags/"$new" \
+                  -f sha="$commit")
 
 echo "::debug::Response from github: $response"
