@@ -58,13 +58,13 @@ echo "pre_release = $pre_release"
 
 # fetch tags
 git fetch --tags
-    
-tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$" 
-preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)?$" 
+
+tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$"
+preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)?$"
 
 # get latest tag that looks like a semver (with or without v)
 case "$tag_context" in
-    *repo*) 
+    *repo*)
         taglist="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt")"
         if [ -z "$taglist" ]
         then
@@ -81,7 +81,7 @@ case "$tag_context" in
             pre_tag="$(semver "$pre_taglist" | tail -n 1)"
         fi
         ;;
-    *branch*) 
+    *branch*)
         taglist="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt")"
         # shellcheck disable=SC2086
         tag="$(semver $taglist | tail -n 1)"
@@ -130,21 +130,21 @@ case "$log" in
     *#major* ) new=$(semver -i major "$tag"); major=true; part="major";;
     *#minor* ) new=$(semver -i minor "$tag"); part="minor";;
     *#patch* ) new=$(semver -i patch "$tag"); part="patch";;
-    *#none* ) 
+    *#none* )
         echo "Default bump was set to none. Skipping..."
         set_output new_tag "$tag"
         set_output tag "$tag"
         exit 0
         ;;
-    * ) 
+    * )
         if [ "$default_semvar_bump" == "none" ]; then
             echo "Default bump was set to none. Skipping..."
             set_output new_tag "$tag"
             set_output tag "$tag"
-            exit 0 
-        else 
-            new=$(semver -i "${default_semvar_bump}" "$tag"); part=$default_semvar_bump 
-        fi 
+            exit 0
+        else
+            new=$(semver -i "${default_semvar_bump}" "$tag"); part=$default_semvar_bump
+        fi
         ;;
 esac
 
@@ -188,7 +188,7 @@ if $dryrun
 then
     set_output tag "$tag"
     exit 0
-fi 
+fi
 
 set_output tag "$new"
 
@@ -196,11 +196,6 @@ set_output tag "$new"
 git tag "$new"
 
 # push it to github
-response=$(gh api --method POST \
-                  -H "Accept: application/vnd.github+json" \
-                  -H "X-GitHub-Api-Version: 2022-11-28" \
-                  "repos/$GITHUB_REPOSITORY/git/refs" \
-                  -f ref=refs/tags/"$new" \
-                  -f sha="$commit")
+response=$(git push origin refs/tags/"$new")
 
 echo "::debug::Response from github: $response"
