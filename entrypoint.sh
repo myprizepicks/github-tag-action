@@ -195,8 +195,12 @@ set_output tag "$new"
 # create local git tag
 git tag "$new"
 
+# If $deploy_token isn't set, just use $GITHUB_TOKEN (this will keep events from firing)
+: "${deploy_token:=$GITHUB_TOKEN}"
+
 unset GITHUB_TOKEN
-echo "$deploy_token" | gh auth login --with-token
+echo "$deploy_token" | gh auth login --with-token || exit 9
+
 # push it to github
 response=$(gh api --method POST \
                   -H "Accept: application/vnd.github+json" \
